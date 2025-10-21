@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <title>Google News Scraper Dashboard</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      :root {
+        --glow: 0 0 40px rgba(99, 102, 241, 0.35),
+          0 0 120px rgba(99, 102, 241, 0.15);
+        --footer-h: 52px;
+      }
+      .bg-grid {
+        background-image: radial-gradient(
+            ellipse 60% 40% at 10% 10%,
+            rgba(99, 102, 241, 0.12),
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 60% 40% at 90% 10%,
+            rgba(236, 72, 153, 0.1),
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 60% 40% at 50% 90%,
+            rgba(16, 185, 129, 0.1),
+            transparent 55%
+          ),
+          linear-gradient(
+            to bottom right,
+            rgba(17, 24, 39, 0.9),
+            rgba(2, 6, 23, 0.95)
+          );
+        background-blend-mode: screen, screen, screen, normal;
+      }
+      .glass {
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .segmented > button[aria-current="true"] {
+        background: linear-gradient(90deg, #4f46e5, #a21caf);
+        color: #fff;
+      }
+      .toast {
+        animation: slideIn 0.4s ease, fadeOut 0.4s ease 4.2s forwards;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateY(16px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      @keyframes fadeOut {
+        to {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+      }
+      footer {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: var(--footer-h);
+      }
+    </style>
+  </head>
+  <body
+    class="min-h-screen text-gray-100 bg-gray-950 overflow-x-hidden pb-[--footer-h]"
+  >
+    <div class="fixed inset-0 -z-10 bg-grid"></div>
+
+    <main
+      class="relative mx-auto max-w-[1260px] px-3 sm:px-4 lg:px-6 py-6 sm:py-8 md:py-12"
+    >
+      <header class="mb-5 md:mb-8 text-center">
+        <div
+          class="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] uppercase tracking-[0.12em] text-indigo-300"
+        >
+          <span
+            class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"
+          ></span
+          >Realtime News Tools
+        </div>
+        <h1
+          class="mt-2 sm:mt-3 font-semibold leading-tight"
+          style="font-size: clamp(1.6rem, 2.2vw + 1rem, 2.5rem)"
+        >
+          Google News
+          <span
+            class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-emerald-400"
+            >Scraper Dashboard</span
+          >
+        </h1>
+        <p
+          class="text-[12.5px] sm:text-sm md:text-base text-gray-400 mt-1.5 sm:mt-2"
+        >
+          Masukkan keyword, jalankan scraping, lihat hasil & tren populer.
+        </p>
+      </header>
+
+      <div
+        class="segmented grid grid-cols-3 max-w-md mx-auto mb-4 sm:mb-6 rounded-2xl overflow-hidden border border-gray-800/80 bg-gray-900/60 glass"
+      >
+        <button
+          id="tabForm"
+          aria-current="true"
+          class="px-3 py-2 sm:py-2.5 text-[13px] sm:text-sm transition"
+        >
+          Form
+        </button>
+        <button
+          id="tabResult"
+          aria-current="false"
+          class="px-3 py-2 sm:py-2.5 text-[13px] sm:text-sm transition"
+        >
+          Hasil
+        </button>
+        <button
+          id="tabTrends"
+          aria-current="false"
+          class="px-3 py-2 sm:py-2.5 text-[13px] sm:text-sm transition"
+        >
+          Tren
+        </button>
+      </div>
+
+      <!-- FORM -->
+      <section
+        id="formSection"
+        class="glass bg-gray-900/50 border border-gray-800/80 rounded-2xl p-4 sm:p-5 md:p-7 shadow-[var(--glow)]"
+      >
+        <form
+          id="scrapeForm"
+          class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 lg:gap-6"
+        >
+          <div class="md:col-span-12">
+            <label class="block text-xs sm:text-sm mb-1.5"
+              >Keywords (pisahkan dengan koma)</label
+            >
+            <div class="relative">
+              <input
+                id="keywords"
+                class="w-full bg-gray-800/70 border border-gray-700/70 rounded-xl px-3 py-2 sm:px-4 sm:py-3 outline-none focus:border-indigo-500/60"
+                placeholder="mis: MRT Jakarta, teknologi AI"
+                required
+              />
+              <span
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-gray-400"
+                >max 20</span
+              >
+            </div>
+          </div>
+
+          <div class="md:col-span-6">
+            <label class="block text-xs sm:text-sm mb-1.5"
+              >Maks. Artikel / Keyword</label
+            >
+            <input
+              id="maxArticles"
+              type="number"
+              min="1"
+              max="100"
+              value="10"
+              class="w-full bg-gray-800/70 border border-gray-700/70 rounded-xl px-3 py-2 sm:px-4 sm:py-3 outline-none focus:border-indigo-500/60"
+            />
+          </div>
+          <div class="md:col-span-6">
+            <label class="block text-xs sm:text-sm mb-1.5"
+              >Domain Filter (opsional)</label
+            >
+            <input
+              id="domainFilter"
+              placeholder="mis: bbc.com"
+              class="w-full bg-gray-800/70 border border-gray-700/70 rounded-xl px-3 py-2 sm:px-4 sm:py-3 outline-none focus:border-indigo-500/60"
+            />
+          </div>
+
+          <div class="md:col-span-6">
+            <label class="block text-xs sm:text-sm mb-1.5">Output Format</label>
+            <select
+              id="outputFormat"
+              class="w-full bg-gray-800/70 border border-gray-700/70 rounded-xl px-3 py-2 sm:px-4 sm:py-3 outline-none focus:border-indigo-500/60"
+            >
+              <option value="csv">CSV</option>
+              <option value="json">JSON</option>
+              <option value="sqlite">SQLite</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+          <div class="md:col-span-6">
+            <label class="block text-xs sm:text-sm mb-1.5">Report Format</label>
+            <select
+              id="reportFormat"
+              class="w-full bg-gray-800/70 border border-gray-700/70 rounded-xl px-3 py-2 sm:px-4 sm:py-3 outline-none focus:border-indigo-500/60"
+            >
+              <option value="">(Tidak ada)</option>
+              <option value="markdown">Markdown</option>
+              <option value="html">HTML</option>
+              <option value="both">Both</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-6 flex items-center gap-2 sm:gap-3">
+            <input
+              id="verbose"
+              type="checkbox"
+              class="w-4 h-4 accent-indigo-500"
+            />
+            <label for="verbose" class="text-xs sm:text-sm">Verbose log</label>
+          </div>
+
+          <div
+            class="md:col-span-12 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3"
+          >
+            <button
+              id="runBtn"
+              class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-500 hover:to-fuchsia-500 shadow-lg shadow-indigo-900/40"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              Jalankan Scrape
+            </button>
+            <div id="spinner" class="hidden text-xs sm:text-sm text-gray-300">
+              ⏳ Memproses…
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- HASIL -->
+      <section id="resultSection" class="hidden mt-5 sm:mt-7">
+        <div
+          class="glass sticky top-2 z-10 rounded-2xl border border-gray-800/80 bg-gray-900/60 p-2.5 sm:p-3 mb-3 sm:mb-4 shadow-[var(--glow)]"
+        >
+          <div
+            class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div class="text-sm sm:text-base font-medium">Hasil Scraping</div>
+            <div class="flex gap-2 sm:gap-3">
+              <input
+                id="searchFilter"
+                placeholder="Cari judul…"
+                class="w-full sm:w-64 bg-gray-800/70 border border-gray-700/70 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500/60"
+              />
+              <div id="fileLinks" class="hidden sm:flex flex-wrap gap-2"></div>
+            </div>
+          </div>
+          <div
+            id="fileLinksMobile"
+            class="mt-2 flex sm:hidden flex-wrap gap-2"
+          ></div>
+        </div>
+
+        <div
+          class="hidden md:block overflow-auto border border-gray-800/80 rounded-2xl glass"
+        >
+          <table class="min-w-full text-[13px] lg:text-sm" id="resultTable">
+            <thead
+              class="bg-gray-900/70 sticky top-0 backdrop-blur cursor-pointer"
+            >
+              <tr class="text-gray-300">
+                <th class="px-3.5 py-3 w-10">#</th>
+                <th class="px-3.5 py-3 text-left" data-sort="title">Judul</th>
+                <th
+                  class="px-3.5 py-3 text-left w-40"
+                  data-sort="date_published"
+                >
+                  Tanggal
+                </th>
+                <th class="px-3.5 py-3 text-left">Snippet</th>
+                <th class="px-3.5 py-3 text-left w-56">Sumber</th>
+              </tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+          </table>
+        </div>
+
+        <div id="resultCards" class="md:hidden grid grid-cols-1 gap-3"></div>
+      </section>
+
+      <!-- TREN -->
+      <section
+        id="trendsSection"
+        class="hidden mt-5 sm:mt-7 glass bg-gray-900/50 border border-gray-800/80 rounded-2xl p-4 sm:p-6 shadow-[var(--glow)]"
+      >
+        <div class="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 class="text-base sm:text-lg font-medium">
+            Tren Pencarian Teknologi
+          </h2>
+          <select
+            id="trendRange"
+            class="bg-gray-800/70 border border-gray-700/70 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm outline-none focus:border-indigo-500/60"
+          >
+            <option value="7">7 hari</option>
+            <option value="30">30 hari</option>
+            <option value="90">90 hari</option>
+          </select>
+        </div>
+        <div class="relative">
+          <canvas id="trendChart" style="max-height: 360px"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <footer
+      class="glass bg-gray-900/85 border-t border-gray-800 text-center text-[11.5px] sm:text-xs text-gray-400 flex items-center justify-center"
+    >
+      © <span id="year"></span> News Scraper · Built with ❤️ oleh Ferdy
+      Salsabilla
+    </footer>
+
+    <div
+      id="toastContainer"
+      class="fixed bottom-[calc(var(--footer-h)+8px)] right-4 space-y-2 z-50"
+    ></div>
+
+    <script>
+      const BASE_URL = window.location.origin; // selalu same-origin dgn tempat halaman dilayani
+
+      // <<=== SAME-ORIGIN (penting!)
+
+      const tabForm = document.getElementById("tabForm");
+      const tabResult = document.getElementById("tabResult");
+      const tabTrends = document.getElementById("tabTrends");
+      const formSection = document.getElementById("formSection");
+      const resultSection = document.getElementById("resultSection");
+      const trendsSection = document.getElementById("trendsSection");
+      const elForm = document.getElementById("scrapeForm");
+      const elResultBody = document.getElementById("resultBody");
+      const elResultCards = document.getElementById("resultCards");
+      const linksDesktop = document.getElementById("fileLinks");
+      const linksMobile = document.getElementById("fileLinksMobile");
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      function setTab(btn) {
+        [tabForm, tabResult, tabTrends].forEach((b) =>
+          b.setAttribute("aria-current", "false")
+        );
+        btn.setAttribute("aria-current", "true");
+        formSection.classList.add("hidden");
+        resultSection.classList.add("hidden");
+        trendsSection.classList.add("hidden");
+        if (btn === tabForm) formSection.classList.remove("hidden");
+        if (btn === tabResult) resultSection.classList.remove("hidden");
+        if (btn === tabTrends) trendsSection.classList.remove("hidden");
+      }
+      tabForm.onclick = () => setTab(tabForm);
+      tabResult.onclick = () => setTab(tabResult);
+      tabTrends.onclick = () => setTab(tabTrends);
+
+      function toast(msg, type = "info") {
+        const box = document.createElement("div");
+        box.className = `toast px-3.5 py-2 rounded-xl text-[12.5px] sm:text-sm glass ${
+          type === "error" ? "bg-red-600/70" : "bg-emerald-600/70"
+        }`;
+        box.textContent = msg;
+        document.getElementById("toastContainer").appendChild(box);
+        setTimeout(() => box.remove(), 4800);
+      }
+
+      function escapeHTML(s = "") {
+        return s.replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#039;",
+            }[m])
+        );
+      }
+      function toHost(url) {
+        try {
+          return new URL(url).host;
+        } catch {
+          return "-";
+        }
+      }
+
+      function renderTable(items) {
+        const elResultBody = document.getElementById("resultBody");
+        if (!items.length) {
+          elResultBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-400 py-6">Tidak ada hasil.</td></tr>`;
+          return;
+        }
+        elResultBody.innerHTML = items
+          .map(
+            (a, i) => `
+          <tr class="odd:bg-gray-900/40">
+            <td class="px-3.5 py-3 text-gray-400">${i + 1}</td>
+            <td class="px-3.5 py-3"><a class="text-indigo-400 hover:text-indigo-300 underline" href="${
+              a.url
+            }" target="_blank">${escapeHTML(
+              a.title || "(tanpa judul)"
+            )}</a></td>
+            <td class="px-3.5 py-3 text-gray-300">${
+              a.date_published || "-"
+            }</td>
+            <td class="px-3.5 py-3 text-gray-300">${escapeHTML(
+              a.snippet || ""
+            )}</td>
+            <td class="px-3.5 py-3 text-gray-400">${toHost(a.url)}</td>
+          </tr>`
+          )
+          .join("");
+      }
+      function renderCards(items) {
+        const elResultCards = document.getElementById("resultCards");
+        if (!items.length) {
+          elResultCards.innerHTML = `<div class="glass rounded-2xl border border-gray-800/80 p-4 text-center text-gray-400">Tidak ada hasil.</div>`;
+          return;
+        }
+        elResultCards.innerHTML = items
+          .map(
+            (a, i) => `
+          <article class="glass rounded-2xl border border-gray-800/80 p-3.5">
+            <div class="flex items-start justify-between gap-2">
+              <span class="text-[11px] text-gray-400">#${i + 1}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full border border-indigo-500/30 text-indigo-300 bg-indigo-500/10">${toHost(
+                a.url
+              )}</span>
+            </div>
+            <a href="${
+              a.url
+            }" target="_blank" class="mt-1.5 block text-[15px] font-medium text-indigo-300 hover:text-indigo-200 underline">
+              ${escapeHTML(a.title || "(tanpa judul)")}
+            </a>
+            <div class="mt-0.5 text-[11px] text-gray-400">${
+              a.date_published || "-"
+            }</div>
+            <p class="mt-2 text-[13px] text-gray-200">${escapeHTML(
+              a.snippet || ""
+            )}</p>
+          </article>`
+          )
+          .join("");
+      }
+
+      let lastArticles = [],
+        sortKey = "",
+        asc = true;
+
+      document
+        .getElementById("scrapeForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const payload = {
+            keywords: document
+              .getElementById("keywords")
+              .value.split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+            max_articles: Number(
+              document.getElementById("maxArticles").value || 10
+            ),
+            output_format: document.getElementById("outputFormat").value,
+            report_format:
+              document.getElementById("reportFormat").value || null,
+            domain_filter:
+              document.getElementById("domainFilter").value || null,
+            verbose: document.getElementById("verbose").checked,
+          };
+          if (payload.keywords.length === 0) {
+            toast("Masukkan minimal 1 keyword", "error");
+            return;
+          }
+          toast("Scraping dimulai…");
+          try {
+            const res = await fetch(`${BASE_URL}/scrape`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error || "Scrape gagal");
+            // setelah lastArticles = data.articles ...
+            lastArticles = (data.articles || []).map((a) => ({
+              url: a.url || a.link || "",
+              title: a.title || a.headline || "",
+              date_published:
+                a.date_published || a.date || a.published_at || a.time || "",
+              snippet: a.snippet || a.summary || "",
+            }));
+
+            // sort descending (baru -> lama)
+            lastArticles.sort((a, b) => {
+              const da = new Date(a.date_published || 0);
+              const db = new Date(b.date_published || 0);
+              return db - da;
+            });
+
+            renderTable(lastArticles);
+            renderCards(lastArticles);
+
+            const linkButtons = (data.files || [])
+              .map((h) => {
+                const abs = new URL(h, BASE_URL).href; // pastikan absolut
+                return `<a href="${abs}" target="_blank" class="text-[11px] sm:text-xs px-2.5 py-1.5 rounded-lg border border-gray-700 hover:border-gray-500 bg-gray-900/40 glass">${h
+                  .split("/")
+                  .pop()}</a>`;
+              })
+              .join("");
+
+            document.getElementById("fileLinks").innerHTML = linkButtons;
+            document.getElementById("fileLinksMobile").innerHTML = linkButtons;
+
+            setTab(tabResult);
+            toast("Scraping selesai ✅", "success");
+          } catch (err) {
+            console.error(err);
+            toast(err.message, "error");
+          }
+        });
+
+      document.getElementById("searchFilter").addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase();
+        const filtered = lastArticles.filter((a) =>
+          (a.title || "").toLowerCase().includes(q)
+        );
+        renderTable(filtered);
+        renderCards(filtered);
+      });
+
+      document
+        .querySelectorAll("#resultTable thead th[data-sort]")
+        .forEach((th) => {
+          th.addEventListener("click", () => {
+            const key = th.dataset.sort;
+            asc = sortKey === key ? !asc : true;
+            sortKey = key;
+            lastArticles.sort((a, b) => {
+              const va = (a[key] || "").toString();
+              const vb = (b[key] || "").toString();
+              return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+            });
+            renderTable(lastArticles);
+          });
+        });
+
+      const ctx = document.getElementById("trendChart");
+      const palette = [
+        "rgba(99,102,241,.95)",
+        "rgba(236,72,153,.95)",
+        "rgba(16,185,129,.95)",
+      ];
+      const fill = [
+        "rgba(99,102,241,.28)",
+        "rgba(236,72,153,.28)",
+        "rgba(16,185,129,.28)",
+      ];
+      const trendChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
+          datasets: [
+            {
+              label: "AI",
+              data: [12, 18, 16, 24, 23, 29, 27],
+              borderColor: palette[0],
+              backgroundColor: fill[0],
+              fill: true,
+              tension: 0.35,
+            },
+            {
+              label: "ERP",
+              data: [7, 10, 9, 14, 15, 17, 20],
+              borderColor: palette[1],
+              backgroundColor: fill[1],
+              fill: true,
+              tension: 0.35,
+            },
+            {
+              label: "Cloud",
+              data: [9, 11, 12, 13, 18, 21, 19],
+              borderColor: palette[2],
+              backgroundColor: fill[2],
+              fill: true,
+              tension: 0.35,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: "#cbd5e1", boxWidth: 12 } },
+            tooltip: { mode: "index", intersect: false },
+          },
+          scales: {
+            x: {
+              ticks: { color: "#94a3b8" },
+              grid: { color: "rgba(148,163,184,.15)" },
+            },
+            y: {
+              ticks: { color: "#94a3b8" },
+              grid: { color: "rgba(148,163,184,.10)" },
+            },
+          },
+        },
+      });
+      document.getElementById("trendRange").addEventListener("change", (e) => {
+        toast(`Rentang tren: ${e.target.value} hari`);
+      });
+    </script>
+  </body>
+</html>
