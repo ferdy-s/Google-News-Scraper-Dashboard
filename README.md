@@ -1,6 +1,8 @@
 # NewsCrap
 NewsCrap adalah alat scraping berita Google berbasis Command Line Interface (CLI) yang dirancang untuk riset, investigasi, dan pengumpulan data OSINT. Dengan fitur canggih seperti rotation proxy, scheduling otomatis, dan multi-format export, alat ini memudahkan pengumpulan data berita secara efisien dan andal.
 
+<img width="2879" height="1583" alt="image" src="https://github.com/user-attachments/assets/35356316-4233-4fb1-8b42-9e5ff37ff9fc" />
+
 
 ![CLI](https://img.shields.io/badge/CLI-Tool-green)
 ![Python](https://img.shields.io/badge/Python-3.6%2B-blue)
