@@ -147,7 +147,8 @@ python news_scrap.py "keyword" --proxy-file proxies.txt
 
 ## ⭐ Support
 
-Your sponsor akan sangat berharga bagi saya dalam research project maupun aktifitas saya di OSS lebih lanjut. terimakasih banyak.
+Sponsor kalian akan sangat berharga bagi saya dalam research project maupun aktifitas saya di OSS lebih lanjut. terimakasih banyak.
+
 ---
 
 **Disclaimer**: Tool ini dibuat untuk tujuan edukasi dan research. Pengguna bertanggung jawab penuh atas penggunaan tool ini sesuai dengan hukum yang berlaku dan kebijakan website yang di-scrape.
